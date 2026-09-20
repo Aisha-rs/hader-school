@@ -206,6 +206,22 @@
     SUPABASE_KEY
   );
 
+  supabaseClient
+    .channel('people-live')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'peeople'
+      },
+      () => {
+        loadPublic();
+        loadManager();
+      }
+    )
+    .subscride();
+
   function hideAll() {
     document.querySelectorAll("main section").forEach(
       section => section.classList.add("hidden")
