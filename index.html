@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>حاضر | نظام الحضور والحالة</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #172033;
+    }
+
+    header {
+      background: #ffffff;
+      padding: 22px;
+      text-align: center;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: #667085;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .welcome {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 25px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    }
+
+    .welcome h2 {
+      font-size: 28px;
+      margin-top: 0;
+    }
+
+    .welcome p {
+      color: #667085;
+      font-size: 17px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .login {
+      background: #172033;
+      color: white;
+    }
+
+    .display {
+      background: #e8f0ff;
+      color: #172033;
+    }
+
+    footer {
+      text-align: center;
+      color: #98a2b3;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>حاضر</h1>
+    <p>نظام الحضور والحالة المباشرة</p>
+  </header>
+
+  <main>
+    <section class="welcome">
+      <h2>مرحبًا بك في حاضر 👋</h2>
+
+      <p>
+        نظام يساعد المدرسة على معرفة حالة الموظفين
+        بشكل مباشر وسهل.
+      </p>
+
+      <div class="buttons">
+        <button class="login" onclick="alert('صفحة تسجيل الدخول ستكون هنا')">
+          تسجيل الدخول
+        </button>
+
+        <button class="display" onclick="alert('الشاشة العامة ستكون هنا')">
+          الشاشة العامة
+        </button>
+      </div>
+    </section>
+
+    <footer>
+      حاضر © 2026
+    </footer>
+  </main>
+
+</body>
+</html>
