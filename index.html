@@ -469,23 +469,162 @@
   }
 
   async function loadManager() {
-    const { data } =
+    const { data: people, error: peopleError } =
       await supabaseClient
         .from("people")
         .select("*")
         .order("display_name");
 
+    if (peopleError) {
+      console.error(peopleError);
+      return;
+    }
+
+    const { data: profiles, error: profilesError } =
+      await supabaseClient
+        .from("private_profiles")
+        .select("id, department");
+
+    if (profilesError) {
+      console.error(profilesError);
+      return;
+    }
+
     const list = document.getElementById("managerList");
+
     list.innerHTML = "<h3>جميع الموظفين</h3>";
 
-    data?.forEach(person => {
+    people?.forEach(person => {
+      const profile =
+        profiles?.find(p => p.id === person.id);
+
       const div = document.createElement("div");
       div.className = "person";
 
-      div.textContent =
+      const info = document.createElement("span");
+
+      info.textContent =
         person.display_name +
         " — " +
-        person.current_status;
+        person.current_status +
+        (profile?.department
+          ? " — " + profile.department
+          : "");
+
+      div.appendChild(info);
+
+      // Edit button
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "✏️ تعديل";
+
+      editBtn.onclick = async () => {
+        const newName = prompt(
+          "اسم الموظف:",
+          person.display_name
+        );
+
+        if (newName === null) return;
+
+        const newDepartment = prompt(
+          "القسم:",
+          profile?.department || ""
+        );
+
+        if (newDepartment === null) return;
+
+        const { data: sessionData } =
+          await supabaseClient.auth.getSession();
+
+        const accessToken =
+          sessionData.session?.access_token;
+
+        if (!accessToken) {
+          alert("يجب تسجيل الدخول أولاً.");
+          return;
+        }
+
+        const response = await fetch(
+          `${SUPABASE_URL}/functions/v1/Manage-employee`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+              action: "update",
+              employeeId: person.id,
+              name: newName.trim(),
+              department: newDepartment.trim()
+            })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.error || "حدث خطأ أثناء التعديل.");
+          return;
+        }
+
+        alert("تم تعديل الموظف بنجاح ✅");
+
+        loadManager();
+        loadPublic();
+      };
+
+      // Delete button
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "🗑️ حذف";
+
+      deleteBtn.onclick = async () => {
+        const confirmed = confirm(
+          `هل أنتِ متأكدة من حذف الموظف "${person.display_name}"؟`
+        );
+
+        if (!confirmed) return;
+
+        const { data: sessionData } =
+          await supabaseClient.auth.getSession();
+
+        const accessToken =
+          sessionData.session?.access_token;
+
+        if (!accessToken) {
+          alert("يجب تسجيل الدخول أولاً.");
+          return;
+        }
+
+        const response = await fetch(
+          `${SUPABASE_URL}/functions/v1/Manage-employee`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+              action: "delete",
+              employeeId: person.id
+            })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          alert(result.error || "حدث خطأ أثناء الحذف.");
+          return;
+        }
+
+        alert("تم حذف الموظف بنجاح ✅");
+
+        loadManager();
+        loadPublic();
+      };
+
+      div.appendChild(editBtn);
+      div.appendChild(deleteBtn);
 
       list.appendChild(div);
     });
