@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>حاضر | نظام الحضور والحالة</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
 
     body {
       margin: 0;
@@ -19,112 +17,381 @@
     }
 
     header {
-      background: #ffffff;
+      background: white;
       padding: 22px;
       text-align: center;
       border-bottom: 1px solid #e5e7eb;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 32px;
-    }
-
-    header p {
-      margin: 8px 0 0;
-      color: #667085;
-    }
+    header h1 { margin: 0; font-size: 32px; }
+    header p { color: #667085; }
 
     main {
       max-width: 1000px;
-      margin: 40px auto;
+      margin: 30px auto;
       padding: 20px;
     }
 
-    .welcome {
+    .card {
       background: white;
       border-radius: 20px;
-      padding: 40px 25px;
-      text-align: center;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.06);
     }
 
-    .welcome h2 {
-      font-size: 28px;
-      margin-top: 0;
-    }
-
-    .welcome p {
-      color: #667085;
-      font-size: 17px;
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-top: 30px;
-    }
+    h2 { margin-top: 0; }
 
     button {
-      border: none;
+      border: 0;
       border-radius: 12px;
-      padding: 14px 25px;
+      padding: 13px 22px;
+      margin: 5px;
       font-size: 16px;
       cursor: pointer;
     }
 
-    .login {
-      background: #172033;
-      color: white;
+    .primary { background: #172033; color: white; }
+    .green { background: #dff7e8; color: #087443; }
+    .yellow { background: #fff3cd; color: #856404; }
+    .blue { background: #e0edff; color: #175cd3; }
+    .red { background: #ffe1e1; color: #b42318; }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin: 8px 0;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      font-size: 16px;
     }
 
-    .display {
-      background: #e8f0ff;
-      color: #172033;
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
     }
 
-    footer {
+    .status-box {
+      padding: 22px;
+      border-radius: 16px;
       text-align: center;
-      color: #98a2b3;
-      margin-top: 40px;
-      font-size: 14px;
+    }
+
+    .status-box h3 {
+      margin: 5px 0;
+      font-size: 22px;
+    }
+
+    .person {
+      background: #f8fafc;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 10px;
+    }
+
+    .hidden { display: none; }
+
+    .message {
+      padding: 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+      background: #eef2ff;
     }
   </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>حاضر</h1>
-    <p>نظام الحضور والحالة المباشرة</p>
-  </header>
+<header>
+  <h1>حاضر</h1>
+  <p>نظام الحضور والحالة المباشرة</p>
+</header>
 
-  <main>
-    <section class="welcome">
-      <h2>مرحبًا بك في حاضر 👋</h2>
+<main>
 
-      <p>
-        نظام يساعد المدرسة على معرفة حالة الموظفين
-        بشكل مباشر وسهل.
-      </p>
+  <section id="home" class="card">
+    <h2>مرحبًا بك في حاضر 👋</h2>
+    <p>نظام يساعد المدرسة على معرفة حالة الموظفين بشكل مباشر.</p>
 
-      <div class="buttons">
-        <button class="login" onclick="alert('صفحة تسجيل الدخول ستكون هنا')">
-          تسجيل الدخول
-        </button>
+    <button class="primary" onclick="showLogin()">تسجيل الدخول</button>
+    <button class="blue" onclick="showPublic()">الشاشة العامة</button>
+  </section>
 
-        <button class="display" onclick="alert('الشاشة العامة ستكون هنا')">
-          الشاشة العامة
-        </button>
+  <section id="login" class="card hidden">
+    <h2>تسجيل الدخول</h2>
+
+    <input id="email" type="email" placeholder="البريد الإلكتروني">
+    <input id="password" type="password" placeholder="كلمة المرور">
+
+    <button class="primary" onclick="login()">دخول</button>
+    <button onclick="goHome()">رجوع</button>
+
+    <div id="loginMessage"></div>
+  </section>
+
+  <section id="userPage" class="card hidden">
+    <h2 id="welcomeUser">مرحبًا</h2>
+
+    <p>اختاري حالتك الحالية:</p>
+
+    <button class="green" onclick="changeStatus('available')">
+      🟢 متوفر الآن
+    </button>
+
+    <button class="yellow" onclick="changeStatus('busy')">
+      🟡 مشغول
+    </button>
+
+    <button class="yellow" onclick="changeStatus('break')">
+      🟡 في البريك
+    </button>
+
+    <button class="blue" onclick="changeStatus('outside')">
+      🔵 خارج المدرسة
+    </button>
+
+    <div id="myStatus" class="message"></div>
+
+    <button onclick="logout()">تسجيل الخروج</button>
+  </section>
+
+  <section id="managerPage" class="card hidden">
+    <h2>لوحة المدير 👑</h2>
+    <div id="managerList"></div>
+  </section>
+
+  <section id="publicPage" class="card hidden">
+    <h2>الحالة الحالية</h2>
+
+    <div class="status-grid">
+
+      <div class="status-box green">
+        <h3>🟢 متوفرون الآن</h3>
+        <div id="availableList"></div>
       </div>
-    </section>
 
-    <footer>
-      حاضر © 2026
-    </footer>
-  </main>
+      <div class="status-box yellow">
+        <h3>🟡 مشغولون / في البريك</h3>
+        <div id="busyList"></div>
+      </div>
+
+      <div class="status-box blue">
+        <h3>🔵 خارج المدرسة</h3>
+        <div id="outsideList"></div>
+      </div>
+
+      <div class="status-box red">
+        <h3>🔴 غائبون</h3>
+        <div id="absentList"></div>
+      </div>
+
+    </div>
+
+    <button onclick="goHome()">رجوع</button>
+  </section>
+
+</main>
+
+<script>
+  /*
+    ضعي بيانات Supabase هنا
+  */
+
+  const SUPABASE_URL = "https://seoysmlcywhpmtviqprc.supabase.co/rest/v1/";
+  const SUPABASE_KEY = "sb_publishable_ovUnGajchP5HIUTtOpZyNQ_1b1STDjI";
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  function hideAll() {
+    document.querySelectorAll("main section").forEach(
+      section => section.classList.add("hidden")
+    );
+  }
+
+  function goHome() {
+    hideAll();
+    document.getElementById("home").classList.remove("hidden");
+  }
+
+  function showLogin() {
+    hideAll();
+    document.getElementById("login").classList.remove("hidden");
+  }
+
+  async function showPublic() {
+    hideAll();
+    document.getElementById("publicPage").classList.remove("hidden");
+    await loadPublic();
+  }
+
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const message = document.getElementById("loginMessage");
+
+    message.innerHTML = "";
+
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) {
+      message.innerHTML =
+        `<div class="message">خطأ: ${error.message}</div>`;
+      return;
+    }
+
+    await openUserPage(data.user);
+  }
+
+  async function openUserPage(user) {
+    hideAll();
+
+    const { data: person } = await supabaseClient
+      .from("people")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    const { data: profile } = await supabaseClient
+      .from("private_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    document.getElementById("userPage").classList.remove("hidden");
+
+    document.getElementById("welcomeUser").textContent =
+      "مرحبًا " + (person?.display_name || "");
+
+    showMyStatus(person?.current_status);
+
+    if (profile?.role === "manager") {
+      document.getElementById("managerPage").classList.remove("hidden");
+      await loadManager();
+    }
+  }
+
+  function showMyStatus(status) {
+    const names = {
+      available: "🟢 متوفر الآن",
+      busy: "🟡 مشغول",
+      break: "🟡 في البريك",
+      outside: "🔵 خارج المدرسة",
+      absent: "🔴 غائب"
+    };
+
+    document.getElementById("myStatus").textContent =
+      "حالتك الحالية: " + (names[status] || "غير محددة");
+  }
+
+  async function changeStatus(newStatus) {
+    const { data: sessionData } =
+      await supabaseClient.auth.getSession();
+
+    const user = sessionData.session?.user;
+
+    if (!user) return;
+
+    await supabaseClient
+      .from("status_history")
+      .insert({
+        person_id: user.id,
+        status: newStatus,
+        started_at: new Date().toISOString()
+      });
+
+    const { error } = await supabaseClient
+      .from("people")
+      .update({
+        current_status: newStatus,
+        status_updated_at: new Date().toISOString()
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      alert("حدث خطأ: " + error.message);
+      return;
+    }
+
+    showMyStatus(newStatus);
+    await loadPublic();
+    await loadManager();
+  }
+
+  async function loadPublic() {
+    const { data, error } =
+      await supabaseClient
+        .from("people")
+        .select("display_name,current_status")
+        .order("display_name");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const lists = {
+      available: document.getElementById("availableList"),
+      busy: document.getElementById("busyList"),
+      break: document.getElementById("busyList"),
+      outside: document.getElementById("outsideList"),
+      absent: document.getElementById("absentList")
+    };
+
+    Object.values(lists).forEach(
+      element => element.innerHTML = ""
+    );
+
+    data.forEach(person => {
+      const div = document.createElement("div");
+      div.className = "person";
+      div.textContent = person.display_name;
+
+      if (lists[person.current_status]) {
+        lists[person.current_status].appendChild(div);
+      }
+    });
+  }
+
+  async function loadManager() {
+    const { data } =
+      await supabaseClient
+        .from("people")
+        .select("*")
+        .order("display_name");
+
+    const list = document.getElementById("managerList");
+    list.innerHTML = "<h3>جميع الموظفين</h3>";
+
+    data?.forEach(person => {
+      const div = document.createElement("div");
+      div.className = "person";
+
+      div.textContent =
+        person.display_name +
+        " — " +
+        person.current_status;
+
+      list.appendChild(div);
+    });
+  }
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    goHome();
+  }
+
+  window.onload = async () => {
+    await loadPublic();
+  };
+</script>
 
 </body>
 </html>
