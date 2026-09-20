@@ -158,6 +158,16 @@
 
   <section id="managerPage" class="card hidden">
     <h2>لوحة المدير 👑</h2>
+    <button id="addEmployeeBtn">➕ إضافة موظف</button>
+    <div id="addEmployeeForm" class="hidden">
+      <h3>إضافة موظف جديد</h3>
+      <input id="employeeName" type="text" placeholder="اسم الموظف">
+      <input id="employeeEmail" type="email" placeholder="البريد الإلكتروني">
+      <input id="employeePassword" type="password" placeholder="كلمة المرور المؤقتة">
+      <input id="employeeDepartment" type="text" placeholder="القسم">
+      <button id="createEmployeeBtn">إضافة الموظف</button>
+      <button id="cancelEmployeeBtn">إلغاء</button>
+    </div>
     <div id="managerList"></div>
   </section>
 
@@ -222,6 +232,87 @@
   );
 
   realtimeChannel.subscribe();
+  const addEmployeeBtn = document.getElementById("addEmployeeBtn");
+  const addEmployeeForm = document.getElementById("addEmployeeForm");
+  const cancelEmployeeBtn = document.getElementById("cancelEmployeeBtn");
+  const createEmployeeBtn = document.getElementById("createEmployeeBtn");
+
+  addEmployeeBtn.addEventListener("click", () => {
+    addEmployeeForm.classList.remove("hidden");
+  });
+
+  cancelEmployeeBtn.addEventListener("click", () => {
+    addEmployeeForm.classList.add("hidden");
+  });
+
+  createEmployeeBtn.addEventListener("click", async () => {
+    const name = document.getElementById("employeeName").value.trim();
+    const email = document.getElementById("employeeEmail").value.trim();
+    const password = document.getElementById("employeePassword").value;
+    const department = document.getElementById("employeeDepartment").value.trim();
+
+    if (!name || !email || !password) {
+      alert("يرجى تعبئة الاسم والبريد الإلكتروني وكلمة المرور.");
+      return;
+    }
+
+    createEmployeeBtn.disabled = true;
+    createEmployeeBtn.textContent = "جاري الإضافة...";
+
+    try {
+      const { data: sessionData } =
+        await supabaseClient.auth.getSession();
+
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        alert("يجب تسجيل الدخول أولاً.");
+        return;
+      }
+
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/create-employee`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            department
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "حدث خطأ أثناء إضافة الموظف.");
+      }
+
+      alert("تمت إضافة الموظف بنجاح ✅");
+
+      document.getElementById("employeeName").value = "";
+      document.getElementById("employeeEmail").value = "";
+      document.getElementById("employeePassword").value = "";
+      document.getElementById("employeeDepartment").value = "";
+
+      addEmployeeForm.classList.add("hidden");
+
+      loadManager();
+      loadPublic();
+
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+    } finally {
+      createEmployeeBtn.disabled = false;
+      createEmployeeBtn.textContent = "إضافة الموظف";
+    }
+  });
 
   function hideAll() {
     document.querySelectorAll("main section").forEach(
