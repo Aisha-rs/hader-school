@@ -206,21 +206,22 @@
     SUPABASE_KEY
   );
 
-  supabaseClient
-    .channel('people-live')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'peeople'
-      },
-      () => {
-        loadPublic();
-        loadManager();
-      }
-    )
-    .subscride();
+  const realtimeChannel = supabaseClient.channel('people-live');
+
+  realtimeChannel.on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'people'
+    },
+    () => {
+      loadPublic();
+      loadManager();
+    }
+  );
+
+  realtimeChannel.subscribe();
 
   function hideAll() {
     document.querySelectorAll("main section").forEach(
